@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Physical AI Radar — 論文・実装・動作条件を、ひとつの地図に。</title>
+  <meta name="description" content="Physical AI の論文・実装・動作条件を横断できる技術カタログ。VLA、ロボット学習、認識、シミュレーション、データセット、エッジ実装を、公式情報と「未確認」の区別つきで整理。">
+  <meta name="theme-color" content="#070b10">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Physical AI Radar">
+  <meta property="og:description" content="論文・実装・動作条件を、ひとつの地図に。Physical AI の技術カタログ。">
+  <meta property="og:site_name" content="Physical AI Radar">
+  <meta name="twitter:card" content="summary">
+  <link rel="alternate" type="application/rss+xml" title="Physical AI Radar: 新着・更新" href="feed.xml">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='44' fill='%23070b10' stroke='%235eead4' stroke-width='4'/%3E%3Ccircle cx='50' cy='50' r='26' fill='none' stroke='%235eead4' stroke-width='2' opacity='.55'/%3E%3Ccircle cx='50' cy='50' r='9' fill='%235eead4'/%3E%3Cpath d='M50 50 L78 25' stroke='%235eead4' stroke-width='3'/%3E%3C/svg%3E">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('physical-ai:theme');
+        document.documentElement.dataset.theme = t || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#app">本文へ移動</a>
+
+  <header class="top">
+    <div class="top-in">
+      <a class="brand" href="#/" aria-label="Physical AI Radar ホーム">
+        <span class="radar-mark" aria-hidden="true"><i></i></span>
+        <span class="brand-text">Physical AI <b>Radar</b></span>
+        <span class="beta">β</span>
+      </a>
+      <label class="search">
+        <span class="sr">技術を検索</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2a8 8 0 0 1 6.32 12.9l5.39 5.4-1.41 1.4-5.4-5.38A8 8 0 1 1 10 2zm0 2a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/></svg>
+        <input id="q" type="search" placeholder="VLA、Isaac Lab、実機評価…" autocomplete="off" spellcheck="false" enterkeyhint="search">
+        <kbd aria-hidden="true">/</kbd>
+      </label>
+      <div class="top-actions">
+        <a id="compare-link" class="icon-btn compare-link" href="#/compare" title="比較リスト" aria-label="比較リスト">
+          <span aria-hidden="true">⇄</span><span id="compare-count" class="count">0</span>
+        </a>
+        <button id="theme" class="icon-btn" type="button" title="テーマを切り替える (t)" aria-label="テーマを切り替える">◐</button>
+        <button id="keys-btn" class="icon-btn" type="button" title="キーボードショートカット (?)" aria-label="キーボードショートカット">?</button>
+      </div>
+    </div>
+    <nav id="nav" class="nav" aria-label="ページ"></nav>
+  </header>
+
+  <main id="app" tabindex="-1"><div class="loading"><span class="spinner"></span>データを読み込み中…</div></main>
+
+  <footer id="foot" class="foot"></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="keys" aria-labelledby="keys-h">
+    <h2 id="keys-h">キーボードショートカット</h2>
+    <dl>
+      <dt><kbd>/</kbd></dt><dd>検索にフォーカス</dd>
+      <dt><kbd>j</kbd> <kbd>k</kbd></dt><dd>次のカード / 前のカード</dd>
+      <dt><kbd>Enter</kbd></dt><dd>選択したカードを開く</dd>
+      <dt><kbd>o</kbd></dt><dd>GitHub を開く</dd>
+      <dt><kbd>c</kbd></dt><dd>比較に追加</dd>
+      <dt><kbd>g</kbd> <kbd>h</kbd></dt><dd>ホームへ</dd>
+      <dt><kbd>g</kbd> <kbd>b</kbd></dt><dd>一覧へ</dd>
+      <dt><kbd>t</kbd></dt><dd>テーマ切り替え</dd>
+      <dt><kbd>?</kbd></dt><dd>このヘルプ</dd>
+      <dt><kbd>Esc</kbd></dt><dd>閉じる / 戻る</dd>
+    </dl>
+    <form method="dialog"><button class="btn primary">閉じる</button></form>
+  </dialog>
+
+  <script src="vendor/fuse.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

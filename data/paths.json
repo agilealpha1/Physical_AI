@@ -1,0 +1,223 @@
+[
+ {
+  "id": "vla-to-real",
+  "title": "VLA を実機で動かすまで",
+  "subtitle": "データ形式 → モデル → 高速化 → シミュレーション評価 → ROS 2 接続",
+  "level": "中級",
+  "time": "2〜4週間",
+  "uses": [
+   "arm",
+   "humanoid"
+  ],
+  "outcome": "VLA の全体像を理解し、公開モデルを自分のアームで推論できるところまで到達する。",
+  "steps": [
+   {
+    "project": "lerobot",
+    "why": "まず実機のデータ形式と制御インターフェースを揃える。ここが後工程の土台になる。"
+   },
+   {
+    "project": "open-x-embodiment",
+    "why": "大規模データの構造・ライセンス・変換方法を把握し、事前学習の前提を知る。"
+   },
+   {
+    "project": "openvla",
+    "why": "VLA の基本アーキテクチャと推論を、公式コードで一度動かす。"
+   },
+   {
+    "project": "openvla-oft",
+    "why": "推論速度と成功率を改善する微調整レシピを試す。"
+   },
+   {
+    "project": "simplerenv",
+    "why": "実機の前に、シミュレーションでポリシーを比較する。"
+   },
+   {
+    "project": "ros2",
+    "why": "カメラ・関節・推論を ROS 2 ノードとして接続し、実機の制御周期に合わせる。"
+   }
+  ],
+  "papers": [
+   {
+    "title": "OpenVLA",
+    "url": "https://arxiv.org/abs/2406.09246",
+    "note": "VLA の基本設計。"
+   },
+   {
+    "title": "OpenVLA-OFT",
+    "url": "https://arxiv.org/abs/2502.19645",
+    "note": "実機向けの高速化。"
+   },
+   {
+    "title": "π0",
+    "url": "https://arxiv.org/abs/2410.24164",
+    "note": "フローモデル型 VLA の代表例。"
+   }
+  ]
+ },
+ {
+  "id": "sim-to-real",
+  "title": "シミュレーションから実機へ",
+  "subtitle": "MuJoCo → Isaac Lab → ベンチマーク → 実機転移",
+  "level": "初級〜中級",
+  "time": "1〜3週間",
+  "uses": [
+   "arm",
+   "humanoid",
+   "warehouse"
+  ],
+  "outcome": "シミュレーションで学習・評価し、その結果を実機の制御スタックへ渡す流れを作る。",
+  "steps": [
+   {
+    "project": "mujoco",
+    "why": "まず軽量な物理シミュレータで、制御則とモデルの当たりを確認する。"
+   },
+   {
+    "project": "mujoco-playground",
+    "why": "GPU 学習と SO-101 の sim-to-real の実例を動かす。"
+   },
+   {
+    "project": "isaac-lab",
+    "why": "大規模並列が必要になったら Isaac Lab に移行する。"
+   },
+   {
+    "project": "robocasa",
+    "why": "家庭内の長いタスクで、汎化性能を評価する。"
+   },
+   {
+    "project": "libero",
+    "why": "VLA / 模倣学習ポリシーを標準ベンチマークで比較する。"
+   },
+   {
+    "project": "ros2-control",
+    "why": "シミュレータと同じ関節インターフェースで実機を動かす。"
+   }
+  ],
+  "papers": [
+   {
+    "title": "MuJoCo Playground",
+    "url": "https://arxiv.org/abs/2502.08844",
+    "note": "sim-to-real の実例。"
+   },
+   {
+    "title": "RoboCasa",
+    "url": "https://arxiv.org/abs/2406.02523",
+    "note": "家庭内タスクの大規模評価。"
+   },
+   {
+    "title": "Diffusion Policy",
+    "url": "https://arxiv.org/abs/2303.04137",
+    "note": "行動生成の基礎。"
+   }
+  ]
+ },
+ {
+  "id": "autonomous-driving",
+  "title": "自動運転スタックを組む",
+  "subtitle": "シナリオ → データ → スタック → エッジ推論",
+  "level": "中級〜上級",
+  "time": "3〜6週間",
+  "uses": [
+   "driving"
+  ],
+  "outcome": "CARLA でシナリオを回し、公開データで認識を評価し、Autoware / TensorRT へ接続する見通しを立てる。",
+  "steps": [
+   {
+    "project": "metadrive",
+    "why": "軽量なシナリオ生成で、RL と一般化の実験を回す。"
+   },
+   {
+    "project": "carla",
+    "why": "都市・センサ・交通を含む、より現実に近い評価環境を構築する。"
+   },
+   {
+    "project": "nuscenes",
+    "why": "3D 認識の公開ベンチマークとデータ形式を確認する。"
+   },
+   {
+    "project": "waymo-open-dataset",
+    "why": "大規模データで、検出・追跡の限界を確認する。"
+   },
+   {
+    "project": "autoware",
+    "why": "認識・計画・制御を ROS 2 スタックとして統合する。"
+   },
+   {
+    "project": "tensorrt",
+    "why": "車載 GPU で動かすための推論最適化を検討する。"
+   }
+  ],
+  "papers": [
+   {
+    "title": "CARLA",
+    "url": "https://arxiv.org/abs/1711.03938",
+    "note": "都市運転シミュレータ。"
+   },
+   {
+    "title": "nuScenes",
+    "url": "https://arxiv.org/abs/1903.11027",
+    "note": "マルチモーダルデータ。"
+   },
+   {
+    "title": "Waymo Open Dataset",
+    "url": "https://arxiv.org/abs/1912.04838",
+    "note": "大規模知覚データ。"
+   }
+  ]
+ },
+ {
+  "id": "humanoid",
+  "title": "ヒューマノイド・双腕の操作",
+  "subtitle": "基盤モデル → 双腕データ → シミュレーション → 関節制御",
+  "level": "中級〜上級",
+  "time": "3〜6週間",
+  "uses": [
+   "humanoid",
+   "arm",
+   "warehouse"
+  ],
+  "outcome": "ヒューマノイド／双腕機向けの VLA を選び、学習データと制御スタックの要件を整理する。",
+  "steps": [
+   {
+    "project": "groot",
+    "why": "ヒューマノイド向け VLA の全体像と展開方法を確認する。"
+   },
+   {
+    "project": "rdt",
+    "why": "双腕・移動マニピュレータ向けの拡散型 VLA を比較する。"
+   },
+   {
+    "project": "aloha",
+    "why": "双腕データ収集のハードウェアと ACT の基準実装を理解する。"
+   },
+   {
+    "project": "isaac-lab",
+    "why": "ヒューマノイドの学習環境を GPU で並列化する。"
+   },
+   {
+    "project": "moveit2",
+    "why": "腕の目標軌道を生成し、把持・配置に接続する。"
+   },
+   {
+    "project": "ros2-control",
+    "why": "関節指令を実機の制御周期で送る。"
+   }
+  ],
+  "papers": [
+   {
+    "title": "GR00T N1",
+    "url": "https://arxiv.org/abs/2503.14734",
+    "note": "ヒューマノイド基盤モデル。"
+   },
+   {
+    "title": "RDT-1B",
+    "url": "https://arxiv.org/abs/2410.07864",
+    "note": "双腕向け拡散 Transformer。"
+   },
+   {
+    "title": "ALOHA / ACT",
+    "url": "https://arxiv.org/abs/2304.13705",
+    "note": "低コスト双腕と模倣学習。"
+   }
+  ]
+ }
+]

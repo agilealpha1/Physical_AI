@@ -1,0 +1,7 @@
+site_dist/
+site_dist.tmp/
+.cache/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store

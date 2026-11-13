@@ -1,0 +1,114 @@
+name: Refresh data and deploy Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Every Monday 03:30 UTC (12:30 JST): refresh metadata, snapshot stars, deploy.
+    - cron: "30 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      refresh_data:
+        description: "Run the GitHub metadata refresh before deploying"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: python -m unittest discover -s pipeline/tests -v
+
+      - name: Validate curated data
+        run: python pipeline/validate.py
+
+      - name: Refresh GitHub metadata and snapshot stars
+        id: refresh
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.refresh_data)
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python pipeline/refresh.py
+
+      - name: Restore previous data after a failed refresh
+        if: steps.refresh.outcome == 'failure'
+        run: |
+          echo "::warning::Metadata refresh failed; deploying the previously committed data."
+          git checkout -- data/
+          git clean -fdq data/
+
+      - name: Commit updated data as github-actions[bot]
+        if: steps.refresh.outcome == 'success'
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/repos.jsonl data/history/stars.jsonl data/meta.json
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+          git commit -q -m "chore(data): weekly refresh $(date -u +%Y-%m-%d)"
+          for attempt in 1 2 3; do
+            if git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main; then
+              echo "Pushed data commit."
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((attempt * 15))
+          done
+          echo "::warning::Could not push the data commit. This deploy still uses the refreshed data."
+          exit 1
+
+      - name: Set up Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Build site
+        env:
+          PA_BASE_URL: ${{ steps.pages.outputs.base_url || 'https://agilealpha1.github.io/Physical_AI/' }}
+        run: python pipeline/build_site_data.py --out site_dist
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site_dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
