@@ -60,12 +60,6 @@ GitHub Actions も毎週データを更新し、サイトを再公開します�
 
 不明な値は空欄や推測で補わず、既存データの形式に従って「未確認」としてください。
 
-## 公開
-
-`main` ブランチへの push で GitHub Actions がビルド・公開します。
-
-https://agilealpha1.github.io/Physical_AI/
-
 ## ライセンス
 
 - サイトのコード: [MIT](LICENSE)
