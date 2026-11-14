@@ -96,7 +96,7 @@ def related_for(item, items, limit=4):
         score += 2 * len(set(o["uses"]) & set(item["uses"]))
         score += len(set(o["tags"]) & set(item["tags"]))
         if score:
-            scored.append((score, o["stars"], o["id"]))
+            scored.append((score, o["stars"] if o["stars"] is not None else -1, o["id"]))
     scored.sort(reverse=True)
     return [x[2] for x in scored[:limit]]
 
@@ -125,9 +125,9 @@ def build_index(projects, repos, paths, history, meta, generated_at):
             "use_labels": [USE_BY_ID[u]["label"] for u in uses],
             "summary": p["summary"],
             "tags": p["tags"],
-            "stars": int(r["stars"]),
+            "stars": int(r["stars"]) if r.get("stars") is not None else None,
             "gain": gain_of(r["id"], history),
-            "forks": int(r.get("forks") or 0),
+            "forks": int(r["forks"]) if r.get("forks") is not None else None,
             "created": r.get("created_at") or "",
             "pushed": r.get("pushed_at") or "",
             "checked_at": p.get("checked_at") or "",
@@ -159,7 +159,7 @@ def build_index(projects, repos, paths, history, meta, generated_at):
             ]),
         }
         items.append(item)
-    items.sort(key=lambda x: (-x["stars"], x["name"].lower()))
+    items.sort(key=lambda x: (-(x["stars"] if x["stars"] is not None else -1), x["name"].lower()))
     for i, x in enumerate(items, 1):
         x["rank"] = i
     return items
@@ -203,7 +203,7 @@ def build_stats(items, history, meta, generated_at, repos):
     cats = _cat_counts(items)
     uses = _use_counts(items)
     checked = max((x["checked_at"] for x in items), default="")
-    fetched = max((r.get("fetched_at", "") for r in repos), default="")
+    fetched = max((r.get("fetched_at") or "" for r in repos), default="")
     return {
         "schema": SCHEMA_VERSION,
         "generated_at": generated_at.isoformat().replace("+00:00", "Z"),
@@ -218,8 +218,8 @@ def build_stats(items, history, meta, generated_at, repos):
         "projects": len(items),
         "categories": len(CATEGORIES),
         "uses": len(USES),
-        "total_stars": sum(x["stars"] for x in items),
-        "total_forks": sum(x["forks"] for x in items),
+        "total_stars": sum(x["stars"] or 0 for x in items),
+        "total_forks": sum(x["forks"] or 0 for x in items),
         "with_real": sum(1 for x in items if x["flags"]["real"]),
         "with_real_vendor": sum(1 for x in items if x["flags"]["real_vendor"]),
         "with_sim": sum(1 for x in items if x["flags"]["sim"]),
@@ -257,7 +257,8 @@ def rss(items, generated_at, base):
                 f'<guid isPermaLink="false">physical-ai-radar-{xesc(x["id"])}</guid>',
                 f'<pubDate>{format_datetime(when)}</pubDate>',
                 f'<category>{xesc(x["category_label"])}</category>',
-                f'<description>{xesc(x["summary"])} / ★ {x["stars"]:,} / {xesc(x["full_name"])}</description>',
+                f'<description>{xesc(x["summary"])} / ★ {x["stars"]:,} / {xesc(x["full_name"])}</description>' if x["stars"] is not None else
+                f'<description>{xesc(x["summary"])} / ★ 未取得 / {xesc(x["full_name"])}</description>',
                 '</item>']
     return "\n".join(out + ['</channel>', '</rss>']) + "\n"
 
@@ -328,6 +329,18 @@ def data_zip(projects, items, repos, history, paths, generated_at):
 
 
 def build(out=DIST, data_dir=DATA, base=None, now=None, site_dir=SITE):
+    root = os.path.realpath(ROOT)
+    out = os.path.realpath(os.path.abspath(out))
+    tmp = out.rstrip("/") + ".tmp"
+    protected = [os.path.join(root, name) for name in (".git", ".github", "data", "deploy", "pipeline", "site")]
+    for path in (out, tmp):
+        if path == os.path.abspath(os.sep) or os.path.commonpath((path, root)) == path:
+            raise ValueError(f"unsafe build output path: {path}")
+        for source in protected:
+            common = os.path.commonpath((path, source))
+            if common in (path, source):
+                raise ValueError(f"unsafe build output path: {path}")
+
     generated_at = now or dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
     base = base_url(base or DEFAULT_BASE)
     errors = validate_data(data_dir)
@@ -355,8 +368,6 @@ def build(out=DIST, data_dir=DATA, base=None, now=None, site_dir=SITE):
         "projects": items,
     }
 
-    out = os.path.abspath(out)
-    tmp = out.rstrip("/") + ".tmp"
     shutil.rmtree(tmp, ignore_errors=True)
     try:
         os.makedirs(os.path.join(tmp, "data", "r"))

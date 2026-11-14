@@ -131,11 +131,11 @@ def validate(projects, repos, paths, history, errors):
     for r in repos:
         if not isinstance(r.get("id"), int):
             errors.append(f"repo {r.get('full_name')}: id must be an integer")
-        if not isinstance(r.get("stars"), int) or r["stars"] < 0:
+        if r.get("stars") is not None and (not isinstance(r.get("stars"), int) or r["stars"] < 0):
             errors.append(f"repo {r.get('full_name')}: stars must be a non-negative integer")
         if not safe_url(r.get("html_url")):
             errors.append(f"repo {r.get('full_name')}: html_url is invalid")
-        if not isinstance(r.get("pushed_at"), str) or len(r["pushed_at"]) != 10:
+        if r.get("pushed_at") is not None and (not isinstance(r.get("pushed_at"), str) or len(r["pushed_at"]) != 10):
             errors.append(f"repo {r.get('full_name')}: pushed_at must be YYYY-MM-DD")
 
     # paths

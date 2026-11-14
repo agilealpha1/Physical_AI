@@ -62,6 +62,7 @@ STATUS_LABELS = {
     "active": "活発",
     "maintenance": "保守中心",
     "archived": "アーカイブ",
+    "unknown": "活動状況未確認",
 }
 
 REQ_STATUS_LABELS = {

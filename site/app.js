@@ -88,6 +88,8 @@ const dec = (x) => { try { return decodeURIComponent(x); } catch { return x; } }
 const httpUrl = (u) => (typeof u === 'string' && /^https?:\/\/[^\s"'<>`\\]+$/i.test(u) ? u : null);
 const num = (n) => Number(n || 0).toLocaleString('ja-JP');
 const compact = (n) => new Intl.NumberFormat('ja-JP', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(n) || 0);
+const starOrder = (p) => p.stars == null ? -1 : Number(p.stars);
+const starText = (n) => n == null ? '未取得' : compact(n);
 const fmtDate = (d) => {
   if (!d) return '—';
   const s = String(d);
@@ -247,7 +249,7 @@ function searchRows() {
   const direct = DATA.projects.filter((p) => terms.every((t) => p.haystack.includes(t)));
   if (direct.length) {
     for (const p of direct) p._score = searchScore(p, terms);
-    return direct.sort((a, b) => b._score - a._score || b.stars - a.stars);
+    return direct.sort((a, b) => b._score - a._score || starOrder(b) - starOrder(a));
   }
   const fuse = FUSE.search(q).map((x) => x.item);
   fuse.forEach((p, i) => { p._score = 1000 - i; });
@@ -262,11 +264,11 @@ function filtered() {
 }
 function sorted(rows) {
   const r = rows.slice();
-  if (S.sort === 'relevance') r.sort((a, b) => (b._score || 0) - (a._score || 0) || b.stars - a.stars);
-  else if (S.sort === 'updated') r.sort((a, b) => (b.pushed || '').localeCompare(a.pushed || '') || b.stars - a.stars);
+  if (S.sort === 'relevance') r.sort((a, b) => (b._score || 0) - (a._score || 0) || starOrder(b) - starOrder(a));
+  else if (S.sort === 'updated') r.sort((a, b) => (b.pushed || '').localeCompare(a.pushed || '') || starOrder(b) - starOrder(a));
   else if (S.sort === 'name') r.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
-  else if (S.sort === 'checked') r.sort((a, b) => (b.checked_at || '').localeCompare(a.checked_at || '') || b.stars - a.stars);
-  else r.sort((a, b) => b.stars - a.stars || a.name.localeCompare(b.name, 'ja'));
+  else if (S.sort === 'checked') r.sort((a, b) => (b.checked_at || '').localeCompare(a.checked_at || '') || starOrder(b) - starOrder(a));
+  else r.sort((a, b) => starOrder(b) - starOrder(a) || a.name.localeCompare(b.name, 'ja'));
   return r;
 }
 function toggle(list, value) {
@@ -291,7 +293,7 @@ function projectCard(p) {
     h('div', { class: 'chips' }, p.uses.map((u, i) => h('a', { class: 'chip', href: `#/browse?use=${encodeURIComponent(u)}` }, p.use_labels[i]))),
     h('div', { class: 'badges' }, allVBadges(p)),
     h('div', { class: 'meta' },
-      h('span', { class: 'star' }, compact(p.stars)),
+      h('span', { class: 'star' }, starText(p.stars)),
       h('span', null, ago(p.pushed) + '更新'),
       h('span', { class: 'sep', 'aria-hidden': 'true' }),
       h('span', null, p.papers_count ? `論文 ${p.papers_count} 本` : '論文リンクなし')),
@@ -304,7 +306,7 @@ function row(p, i) {
       h('span', { class: 'name' }, p.name, h('span', null, p.full_name)),
       h('span', { class: 'desc' }, p.summary)),
     h('span', { class: 'cat' }, p.category_label),
-    h('span', { class: 'star' }, '★ ' + compact(p.stars), h('small', null, '  ' + ago(p.pushed))),
+    h('span', { class: 'star' }, '★ ' + starText(p.stars), h('small', null, '  ' + ago(p.pushed))),
   );
 }
 function sectionHead(title, sub, href, linkLabel) {
@@ -346,7 +348,7 @@ function hero() {
 }
 function home() {
   const featured = DATA.projects.filter((p) => p.featured);
-  const vendor = DATA.projects.filter((p) => p.flags.real_vendor).sort((a, b) => b.stars - a.stars).slice(0, 6);
+  const vendor = DATA.projects.filter((p) => p.flags.real_vendor).sort((a, b) => starOrder(b) - starOrder(a)).slice(0, 6);
   const recent = DATA.projects.slice().sort((a, b) => (b.pushed || '').localeCompare(a.pushed || '')).slice(0, 8);
   const total = DATA.projects.length;
   return [
@@ -609,8 +611,8 @@ function detail(d) {
     h('section', { class: 'panel' },
       h('h2', null, '数値'),
       h('div', { class: 'facts-grid' },
-        h('div', { class: 'fact' }, h('span', { class: 'k' }, 'Stars'), h('span', { class: 'v gold' }, '★ ' + num(d.stars))),
-        h('div', { class: 'fact' }, h('span', { class: 'k' }, 'Forks'), h('span', { class: 'v' }, num(d.forks))),
+        h('div', { class: 'fact' }, h('span', { class: 'k' }, 'Stars'), h('span', { class: 'v gold' }, '★ ' + starText(d.stars))),
+        h('div', { class: 'fact' }, h('span', { class: 'k' }, 'Forks'), h('span', { class: 'v' }, d.forks == null ? '未取得' : num(d.forks))),
         h('div', { class: 'fact' }, h('span', { class: 'k' }, '最終 push'), h('span', { class: 'v' }, fmtDate(d.pushed))),
         h('div', { class: 'fact' }, h('span', { class: 'k' }, '週次増加'), h('span', { class: 'v' }, d.gain == null ? '計測中' : `${d.gain > 0 ? '+' : ''}${num(d.gain)}`)),
         h('div', { class: 'fact' }, h('span', { class: 'k' }, '確認日'), h('span', { class: 'v' }, fmtDate(d.checked_at))),
@@ -696,7 +698,7 @@ function compareTable(ds) {
   const rows = [
     ['カテゴリ', (d) => cell(h('span', { class: 'cat-badge', style: { '--cat': d.category_color } }, d.category_label))],
     ['用途', (d) => cell(h('div', { class: 'chips' }, d.uses.map((u, i) => h('span', { class: 'chip' }, d.use_labels[i]))))],
-    ['Stars', (d) => cell(h('span', { class: 'good' }, '★ ' + num(d.stars)))],
+    ['Stars', (d) => cell(h('span', { class: 'good' }, '★ ' + starText(d.stars)))],
     ['最終 push', (d) => cell(fmtDate(d.pushed))],
     ['確認日', (d) => cell(fmtDate(d.checked_at))],
     ['状態', (d) => cell(STATUS_LABEL[d.status] || d.status)],
@@ -787,7 +789,7 @@ function pathDetail() {
         h('div', { class: 'num' }, String(i + 1).padStart(2, '0')),
         h('div', { class: 'body' },
           h('div', { class: 'top' }, h('span', { class: 'cat-badge', style: { '--cat': pr.category_color } }, pr.category_label),
-            h('span', { class: 'small', style: { color: 'var(--muted-2)' } }, `★ ${compact(pr.stars)}`)),
+            h('span', { class: 'small', style: { color: 'var(--muted-2)' } }, `★ ${starText(pr.stars)}`)),
           h('h3', null, h('a', { href: projectHref(pr), style: { color: 'var(--text)' } }, pr.name)),
           h('p', { class: 'why' }, s.why),
           h('div', { class: 'links' },
@@ -827,7 +829,7 @@ function about() {
         h('tr', null, h('td', null, 'Real robot'), h('td', null, '開発元 / 第三者 / コミュニティ / 記載なし / 未確認'), h('td', null, '誰が実機で確認したか。開発元の評価とコミュニティの事例を分けています。')),
         h('tr', null, h('td', null, 'Reproduction'), h('td', null, '公式手順あり / 第三者再現あり / 記載なし / 未確認'), h('td', null, '第三者がコード・手順・重みを使って再現できる状態か。')),
         h('tr', null, h('td', null, '動作条件'), h('td', null, '公式確認 / コミュニティ情報 / 未確認 / 該当なし'), h('td', null, 'OS・GPU・VRAM・対応ロボット・シミュレータ・ランタイムの情報源の確度。'))),
-    h('p', null, '初版では全 47 件に公式コードまたは公式手順があります。一方、第三者が独立に再現したことを確認できたものはまだ限定的で、',
+    h('p', null, '初版 47 件には公式コードまたは公式手順があります。今回追加した 64 件は GitHub リポジトリの存在を確認した段階で、動作条件・実機評価・ライセンスは「未確認」です。第三者が独立に再現したことを確認できたものはまだ限定的で、',
       h('strong', null, '「公式手順あり」と「第三者再現あり」を混同しない'), 'ようにしています。確認できたものから更新します。'),
     h('div', { class: 'callout' }, h('p', null, h('strong', null, '「未確認」は失敗ではありません。'), ' 推測で埋めるより、確認できていないことを明示する方が技術選定に使えます。')),
     h('h2', null, '更新と公開の分離'),
@@ -845,6 +847,9 @@ function about() {
     h('h2', null, '論文と学習パス'),
     P('各プロジェクトの代表論文を 1〜2 本掲載し、目的別の学習パスでプロジェクトと論文をつないでいます。',
       'HackerPapers のような大規模な論文データベースではなく、実装を起点にした最小限の論文導線です。'),
+    h('h2', null, '外部ベンチマーク情報'),
+    P('BenchLM の広い LLM ベンチマーク一覧から、Physical AI に直接関係する RoboDojo Sim を参考情報として掲載しています。BenchLM のページでは 5 件の結果がすべて提供元報告とされ、評価ハーネスは公開されていません。独立に再現できる公開ベンチマークとしては扱わず、',
+      h('a', { href: 'https://benchlm.ai/benchmarks/robodojosim', ...ext }, 'BenchLM の RoboDojo Sim 記録'), 'を参照してください。'),
     h('h2', null, 'データとライセンス'),
     P('キュレーションしたカタログデータは CC0 1.0 で公開しています。',
       h('a', { href: 'download/physical-ai-radar-data.zip' }, '物理 AI Radar データ（CSV / JSON / 履歴）'), ' からダウンロードできます。',

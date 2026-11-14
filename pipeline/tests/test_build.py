@@ -26,8 +26,8 @@ class BuildTest(unittest.TestCase):
 
     def test_index_and_details(self):
         idx = read_json(os.path.join(self.out, "data", "index.json"))
-        self.assertEqual(len(idx["projects"]), 47)
-        self.assertEqual(len({p["id"] for p in idx["projects"]}), 47)
+        self.assertEqual(len(idx["projects"]), 111)
+        self.assertEqual(len({p["id"] for p in idx["projects"]}), 111)
         for p in idx["projects"]:
             d = read_json(os.path.join(self.out, "data", "r", p["id"] + ".json"))
             self.assertEqual(d["id"], p["id"])
@@ -38,7 +38,7 @@ class BuildTest(unittest.TestCase):
 
     def test_stats_and_gain(self):
         st = read_json(os.path.join(self.out, "data", "stats.json"))
-        self.assertEqual(st["projects"], 47)
+        self.assertEqual(st["projects"], 111)
         self.assertEqual(st["categories"], 5)
         self.assertEqual(st["snapshots"], 1)
         self.assertFalse(st["gain_ready"])
@@ -46,6 +46,11 @@ class BuildTest(unittest.TestCase):
         first = self.items[0]
         self.assertIsNone(first["gain"])
         self.assertTrue(first["stars"] > 0)
+
+    def test_refuses_source_directory_as_output(self):
+        for path in (ROOT, os.path.join(ROOT, "data"), os.path.dirname(ROOT)):
+            with self.subTest(path=path), self.assertRaisesRegex(ValueError, "unsafe build output path"):
+                build(path)
 
     def test_rss_and_open_data(self):
         with open(os.path.join(self.out, "feed.xml"), encoding="utf-8") as f:
