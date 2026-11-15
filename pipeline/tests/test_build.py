@@ -67,6 +67,22 @@ class BuildTest(unittest.TestCase):
             self.assertIn("paths.json", names)
             self.assertIn("LICENSE.txt", names)
 
+    def test_sitemap_robots_and_social_metadata(self):
+        with open(os.path.join(self.out, "robots.txt"), encoding="utf-8") as f:
+            robots = f.read()
+        self.assertIn("Sitemap: https://example.com/Physical_AI/sitemap.xml", robots)
+
+        with open(os.path.join(self.out, "sitemap.xml"), encoding="utf-8") as f:
+            sitemap = f.read()
+        self.assertIn("<loc>https://example.com/Physical_AI/</loc>", sitemap)
+
+        with open(os.path.join(self.out, "index.html"), encoding="utf-8") as f:
+            html = f.read()
+        self.assertIn('<link rel="canonical" href="https://agilealpha1.github.io/Physical_AI/">', html)
+        self.assertIn('<meta property="og:url" content="https://agilealpha1.github.io/Physical_AI/">', html)
+        self.assertIn('<meta name="twitter:title" content="Physical AI Radar">', html)
+        self.assertIn('<meta name="twitter:description"', html)
+
     def test_paths_resolve(self):
         paths = read_json(os.path.join(self.out, "data", "paths.json"))
         ids = {p["id"] for p in self.items}

@@ -2,6 +2,8 @@
 
 論文・コード・動作条件をまとめて探せる、Physical AI の技術カタログです。
 
+[Live site: Physical AI Radar](https://agilealpha1.github.io/Physical_AI/)
+
 [![Deploy](https://github.com/agilealpha1/Physical_AI/actions/workflows/pages.yml/badge.svg)](https://github.com/agilealpha1/Physical_AI/actions/workflows/pages.yml)
 [![Code: MIT](https://img.shields.io/badge/code-MIT-blue.svg)](LICENSE)
 [![Data: CC0](https://img.shields.io/badge/data-CC0%201.0-lightgrey.svg)](DATA_LICENSE.md)

@@ -269,6 +269,17 @@ def _csv_value(v):
     return "" if v is None else str(v)
 
 
+def sitemap(base):
+    """検索エンジン向けに、検索可能なサイトのルート URL を公開する。"""
+    return "\n".join([
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        f"  <url><loc>{xesc(base)}</loc></url>",
+        "</urlset>",
+        "",
+    ])
+
+
 def data_zip(projects, items, repos, history, paths, generated_at):
     buf, stamp = io.BytesIO(), generated_at.timetuple()[:6]
     by_id = {x["id"]: x for x in items}
@@ -388,7 +399,9 @@ def build(out=DIST, data_dir=DATA, base=None, now=None, site_dir=SITE):
         with open(os.path.join(tmp, "feed.xml"), "w", encoding="utf-8") as f:
             f.write(rss(items, generated_at, base))
         with open(os.path.join(tmp, "robots.txt"), "w", encoding="utf-8") as f:
-            f.write("User-agent: *\nAllow: /\n")
+            f.write(f"User-agent: *\nAllow: /\nSitemap: {base}sitemap.xml\n")
+        with open(os.path.join(tmp, "sitemap.xml"), "w", encoding="utf-8") as f:
+            f.write(sitemap(base))
         with open(os.path.join(tmp, ".nojekyll"), "w", encoding="utf-8") as f:
             f.write("")
         with open(os.path.join(tmp, "download", "physical-ai-radar-data.zip"), "wb") as f:
@@ -403,7 +416,8 @@ def build(out=DIST, data_dir=DATA, base=None, now=None, site_dir=SITE):
 
 
 def validate_build(out, expected_ids, expected_count):
-    required = ["index.html", "app.js", "style.css", ".nojekyll", "feed.xml", "data/index.json", "data/stats.json",
+    required = ["index.html", "app.js", "style.css", ".nojekyll", "feed.xml", "robots.txt", "sitemap.xml",
+                "data/index.json", "data/stats.json",
                 "data/paths.json", "download/physical-ai-radar-data.zip"]
     for rel in required:
         if not os.path.exists(os.path.join(out, rel)):
